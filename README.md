@@ -305,8 +305,6 @@ Admins can manage products and orders.
 
 Team Members:
 
-* Srajal Vishwakarma (Team Lead)
-* Swati Kori
 * Tushar Kewat
 * Uday Kanojiya
 
@@ -319,3 +317,4 @@ This project is developed for **educational and demonstration purposes**.
 ---
 
 ⭐ If you found this project useful, please consider **starring the repository**.
+
