@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  
+  <!-- Background -->
+  <rect x="0" y="0" width="120" height="120" rx="25" fill="#3b5bdb"></rect>
+
+  <!-- Letter S -->
+  <text x="50%" y="58%" text-anchor="middle" dominant-baseline="middle" font-family="Poppins, Arial, sans-serif" font-size="70" font-weight="700" fill="white">
+    S
+  </text>
+
+</svg>
