@@ -10,6 +10,7 @@ const orderItemSchema = new mongoose_1.default.Schema({
     quantity: { type: Number, required: true },
     price: { type: Number, required: true },
     size: { type: String },
+    seller: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'User', required: true },
 });
 const orderSchema = new mongoose_1.default.Schema({
     user: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'User', required: true },

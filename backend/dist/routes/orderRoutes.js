@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const Order_1 = require("../models/Order");
+const Product_1 = require("../models/Product");
 const authMiddleware_1 = require("../middleware/authMiddleware");
 const router = express_1.default.Router();
 // Place a new order
@@ -13,12 +14,20 @@ router.post('/', authMiddleware_1.authenticate, async (req, res) => {
         const userId = req.user?.id;
         const { totalAmount, paymentMethod, address, pincode, mobile, customerName, customerEmail, items } = req.body;
         // Transform items for Mongoose schema (productId -> product ref)
-        const formattedItems = items.map((item) => ({
-            product: item.productId,
-            quantity: item.quantity,
-            price: item.price,
-            size: item.size
-        }));
+        const formattedItems = [];
+        for (const item of items) {
+            const product = await Product_1.Product.findById(item.productId);
+            if (!product) {
+                return res.status(404).json({ message: `Product ${item.productId} not found` });
+            }
+            formattedItems.push({
+                product: item.productId,
+                quantity: item.quantity,
+                price: item.price,
+                size: item.size,
+                seller: product.seller // Associate item with its seller
+            });
+        }
         const newOrder = new Order_1.Order({
             user: userId,
             total_amount: totalAmount,
@@ -32,6 +41,12 @@ router.post('/', authMiddleware_1.authenticate, async (req, res) => {
             items: formattedItems
         });
         await newOrder.save();
+        // Decrement stock for each product
+        for (const item of items) {
+            await Product_1.Product.findByIdAndUpdate(item.productId, {
+                $inc: { stock: -item.quantity }
+            });
+        }
         // Populate product details directly
         const populatedOrder = await Order_1.Order.findById(newOrder._id).populate('items.product');
         // Format to match frontend expectations
@@ -41,7 +56,7 @@ router.post('/', authMiddleware_1.authenticate, async (req, res) => {
         res.status(201).json(orderDoc);
     }
     catch (error) {
-        console.error(error);
+        console.error('Error placing order:', error);
         res.status(500).json({ message: 'Failed to place order' });
     }
 });
@@ -63,17 +78,32 @@ router.get('/my-orders', authMiddleware_1.authenticate, async (req, res) => {
 });
 // Admin: Get all orders
 router.get('/', authMiddleware_1.authenticate, authMiddleware_1.requireAdmin, async (req, res) => {
+    console.log(`[Admin] GET /api/orders called by user: ${req.user?.id} (${req.user?.role})`);
     try {
-        const orders = await Order_1.Order.find()
+        const sellerId = req.user.id;
+        // Find orders where at least one item belongs to this seller
+        const orders = await Order_1.Order.find({ 'items.seller': sellerId })
             .populate('items.product')
             .sort({ createdAt: -1 });
+        console.log(`[Admin] Found ${orders.length} orders containing items for seller ${sellerId}.`);
         const mappedOrders = orders.map(order => {
             const doc = order.toObject();
-            return { ...doc, id: doc._id, order_items: doc.items };
+            // Filter items to only show this seller's products
+            const sellerItems = doc.items.filter((item) => item.seller.toString() === sellerId);
+            // Re-calculate total amount for THIS seller's part of the order (optional, but good for dashboard)
+            const sellerTotal = sellerItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            return {
+                ...doc,
+                id: doc._id,
+                items: sellerItems,
+                order_items: sellerItems,
+                total_amount: sellerTotal // Override for seller dashboard stats
+            };
         });
         res.json(mappedOrders);
     }
     catch (error) {
+        console.error('Error fetching admin orders:', error);
         res.status(500).json({ message: 'Failed to fetch all orders' });
     }
 });

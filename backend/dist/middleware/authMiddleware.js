@@ -16,11 +16,15 @@ const authenticate = async (req, res, next) => {
         const secret = process.env.JWT_SECRET || 'secret';
         const decoded = jsonwebtoken_1.default.verify(token, secret);
         // Verify user still exists in DB
-        const user = await User_1.User.findById(decoded.id).select('_id role');
+        const user = await User_1.User.findById(decoded.id).select('_id username role');
         if (!user) {
             return res.status(401).json({ message: 'User not found' });
         }
-        req.user = decoded;
+        req.user = {
+            id: user._id.toString(),
+            username: user.username,
+            role: user.role
+        };
         next();
     }
     catch (error) {

@@ -11,8 +11,17 @@ const connectDB = async () => {
         console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     }
     catch (error) {
-        console.error(`❌ Error connecting to MongoDB: ${error.message}`);
-        process.exit(1);
+        if (error.message.includes('IP not whitelisted') || error.message.includes('ServerSelectionError')) {
+            console.error(`❌ MongoDB Connection Error: Potential IP whitelisting issue!`);
+            console.error(`👉 Please ensure your IP is whitelisted in MongoDB Atlas: https://www.mongodb.com/docs/atlas/security-whitelist/`);
+        }
+        else {
+            console.error(`❌ Error connecting to MongoDB: ${error.message}`);
+        }
+        // Don't exit process in dev mode so the developer can see the error in the console
+        if (process.env.NODE_ENV === 'production') {
+            process.exit(1);
+        }
     }
 };
 exports.default = connectDB;

@@ -34,6 +34,7 @@ router.get('/', async (req, res) => {
         else if (sort === 'priceDesc')
             sortOption = { price: -1 };
         const products = await Product_1.Product.find(query).sort(sortOption);
+        console.log(`[Products] Found ${products.length} products.`);
         // Map _id to id for frontend compatibility
         const mappedProducts = products.map((p) => {
             const doc = p.toObject();
@@ -44,6 +45,20 @@ router.get('/', async (req, res) => {
     catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Failed to fetch products' });
+    }
+});
+// Admin: Get seller's own products
+router.get('/seller', authMiddleware_1.authenticate, authMiddleware_1.requireAdmin, async (req, res) => {
+    try {
+        const products = await Product_1.Product.find({ seller: req.user.id }).sort({ createdAt: -1 });
+        const mappedProducts = products.map((p) => {
+            const doc = p.toObject();
+            return { ...doc, id: doc._id };
+        });
+        res.json(mappedProducts);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Failed to fetch seller products' });
     }
 });
 // Get single product
@@ -63,7 +78,10 @@ router.get('/:id', async (req, res) => {
 // Admin: Create product
 router.post('/', authMiddleware_1.authenticate, authMiddleware_1.requireAdmin, async (req, res) => {
     try {
-        const newProduct = new Product_1.Product(req.body);
+        const newProduct = new Product_1.Product({
+            ...req.body,
+            seller: req.user.id
+        });
         await newProduct.save();
         const doc = newProduct.toObject();
         res.status(201).json({ ...doc, id: doc._id });
@@ -76,10 +94,16 @@ router.post('/', authMiddleware_1.authenticate, authMiddleware_1.requireAdmin, a
 // Admin: Update product
 router.put('/:id', authMiddleware_1.authenticate, authMiddleware_1.requireAdmin, async (req, res) => {
     try {
-        const product = await Product_1.Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const product = await Product_1.Product.findById(req.params.id);
         if (!product) {
             return res.status(404).json({ message: 'Product not found' });
         }
+        // Check ownership
+        if (product.seller.toString() !== req.user.id.toString()) {
+            return res.status(403).json({ message: 'Not authorized to edit this product' });
+        }
+        Object.assign(product, req.body);
+        await product.save();
         const doc = product.toObject();
         res.json({ ...doc, id: doc._id });
     }
@@ -91,15 +115,53 @@ router.put('/:id', authMiddleware_1.authenticate, authMiddleware_1.requireAdmin,
 // Admin: Delete product
 router.delete('/:id', authMiddleware_1.authenticate, authMiddleware_1.requireAdmin, async (req, res) => {
     try {
-        const product = await Product_1.Product.findByIdAndDelete(req.params.id);
+        const product = await Product_1.Product.findById(req.params.id);
         if (!product) {
             return res.status(404).json({ message: 'Product not found' });
         }
+        // Check ownership
+        if (product.seller.toString() !== req.user.id.toString()) {
+            return res.status(403).json({ message: 'Not authorized to delete this product' });
+        }
+        await Product_1.Product.findByIdAndDelete(req.params.id);
         res.json({ message: 'Product deleted successfully' });
     }
     catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Failed to delete product' });
+    }
+});
+// Product Reviews
+router.post('/:id/reviews', authMiddleware_1.authenticate, async (req, res) => {
+    try {
+        const { rating, comment } = req.body;
+        const product = await Product_1.Product.findById(req.params.id);
+        if (product) {
+            const alreadyReviewed = product.reviews.find((r) => r.user.toString() === req.user.id.toString());
+            if (alreadyReviewed) {
+                return res.status(400).json({ message: 'Product already reviewed' });
+            }
+            const review = {
+                user: req.user.id,
+                username: req.user.username || 'Anonymous',
+                rating: Number(rating),
+                comment,
+            };
+            product.reviews.push(review);
+            product.numReviews = product.reviews.length;
+            product.rating =
+                product.reviews.reduce((acc, item) => item.rating + acc, 0) /
+                    product.numReviews;
+            await product.save();
+            res.status(201).json({ message: 'Review added' });
+        }
+        else {
+            res.status(404).json({ message: 'Product not found' });
+        }
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Failed to add review' });
     }
 });
 exports.default = router;

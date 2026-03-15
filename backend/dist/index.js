@@ -27,6 +27,12 @@ app.use('/api/banner', bannerRoutes_1.default);
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'ShopEZ backend is running' });
 });
+const path_1 = __importDefault(require("path"));
+const __dirname = path_1.default.resolve();
+app.use(express_1.default.static(path_1.default.join(__dirname, "../../frontend/dist")));
+app.get("*", (req, res) => {
+    res.sendFile(path_1.default.join(__dirname, "../../frontend/dist/index.html"));
+});
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });

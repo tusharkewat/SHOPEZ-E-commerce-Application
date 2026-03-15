@@ -22,7 +22,7 @@ router.post('/register', async (req, res) => {
             username,
             email,
             password: hashedPassword,
-            role: 'CUSTOMER'
+            role: req.body.role || 'CUSTOMER'
         });
         await newUser.save();
         const token = jsonwebtoken_1.default.sign({ id: newUser._id, role: newUser.role }, process.env.JWT_SECRET || 'secret', { expiresIn: '1d' });
