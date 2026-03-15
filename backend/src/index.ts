@@ -33,10 +33,15 @@ app.get('/api/health', (req: Request, res: Response) => {
 
 import path from "path";
 
-app.use(express.static(path.join(__dirname, "../../frontend/dist")));
+const frontendPath = path.join(__dirname, "../../frontend/dist");
 
-app.get("/(.*)", (req, res) => {
-  res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"));
+// Serve frontend static files
+app.use(express.static(frontendPath));
+
+// Catch all non-API routes and send index.html
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api")) return next();
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
 
 const PORT = process.env.PORT || 5000;
