@@ -35,10 +35,10 @@ import path from "path";
 
 const frontendPath = path.join(__dirname, "../../frontend/dist");
 
-// Serve frontend static files
+// serve frontend static files
 app.use(express.static(frontendPath));
 
-// Catch all non-API routes and send index.html
+// fallback for SPA
 app.use((req, res, next) => {
   if (req.path.startsWith("/api")) return next();
   res.sendFile(path.join(frontendPath, "index.html"));
