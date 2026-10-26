@@ -141,7 +141,7 @@ This architecture ensures:
 ```
 shopez
 │
-├── client                # React Frontend
+├── frontend               # React Frontend
 │   ├── src
 │   │   ├── components
 │   │   ├── pages
@@ -150,7 +150,7 @@ shopez
 │   │   ├── App.jsx
 │   │   └── main.jsx
 │
-├── server                # Node.js Backend
+├── backend               # Node.js Backend
 │   ├── config
 │   ├── models
 │   ├── controllers
@@ -178,7 +178,7 @@ cd shopez
 ### 2️⃣ Setup Backend
 
 ```bash
-cd server
+cd backend
 npm install
 ```
 
@@ -201,7 +201,7 @@ http://localhost:8000
 Open another terminal:
 
 ```bash
-cd client
+cd frontend
 npm install
 npm run dev
 ```
@@ -265,31 +265,6 @@ PUT /api/orders/:id
 ```
 
 ---
-
-# 📸 Demo Screenshots
-
-### Landing Page
-
-Displays promotional banner and product categories.
-
-### Products Page
-
-Lists all available products with filters and sorting.
-
-### Authentication
-
-User registration and login system.
-
-### Cart Page
-
-Users can review and place orders.
-
-### Admin Dashboard
-
-Admins can manage products and orders.
-
----
-
 # 🔮 Future Improvements
 
 * Online payment integration (Stripe / Razorpay)
