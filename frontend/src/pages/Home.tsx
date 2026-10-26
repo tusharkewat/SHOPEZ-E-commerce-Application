@@ -17,7 +17,24 @@ const Home = () => {
         ]);
         const fallbackImage = 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&q=80&w=2070';
         setBannerUrl(bannerRes.data?.image_url ? bannerRes.data.image_url : fallbackImage);
-        setFeaturedProducts(productsRes.data.slice(0, 8));
+        const responseData = productsRes.data;
+
+        console.log("Products API response:", responseData);
+
+        const products = Array.isArray(responseData)
+          ? responseData
+          : Array.isArray(responseData?.products)
+            ? responseData.products
+            : Array.isArray(responseData?.data)
+              ? responseData.data
+              : null;
+
+        if (products === null) {
+          console.error("Unexpected products API response:", responseData);
+          setFeaturedProducts([]);
+        } else {
+          setFeaturedProducts(products.slice(0, 8));
+        }
       } catch (error) {
         console.error("Failed to fetch home data", error);
       } finally {
@@ -51,7 +68,7 @@ const Home = () => {
           <img src={bannerUrl} alt="Hero Banner" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-black/40"></div>
         </div>
-        
+
         <div className="relative z-10 text-center px-6 max-w-4xl mx-auto mt-20">
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight drop-shadow-lg">
             SUPER SALE <br /> <span className="text-[#FF3B30]">Shop Your Favorites</span>
@@ -75,7 +92,7 @@ const Home = () => {
               <h2 className="text-3xl md:text-4xl font-bold">Shop by Category</h2>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-6">
             {categories.map((cat) => (
               <Link to={`/products?category=${cat.name}`} key={cat.name} className="group premium-card block">
@@ -132,7 +149,7 @@ const Home = () => {
               View All
             </Link>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {featuredProducts.length === 0 ? (
               [...Array(4)].map((_, i) => (
@@ -147,9 +164,9 @@ const Home = () => {
                         {p.discount}% OFF
                       </div>
                     )}
-                    <img 
-                      src={p.images[0] || 'https://via.placeholder.com/300'} 
-                      alt={p.name} 
+                    <img
+                      src={p.images[0] || 'https://via.placeholder.com/300'}
+                      alt={p.name}
                       className="w-full h-full object-cover mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
                     />
                   </Link>
@@ -168,7 +185,7 @@ const Home = () => {
                     </div>
                     <div className="mt-auto flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-xl text-gray-900">₹{(p.price * (1 - p.discount/100)).toFixed(0)}</span>
+                        <span className="font-bold text-xl text-gray-900">₹{(p.price * (1 - p.discount / 100)).toFixed(0)}</span>
                         {p.discount > 0 && <span className="text-gray-400 text-sm line-through">₹{p.price}</span>}
                       </div>
                     </div>
@@ -186,7 +203,7 @@ const Home = () => {
           <div className="bg-gradient-to-r from-[#5A4BFF] to-[#3B82F6] rounded-3xl p-10 md:p-16 flex flex-col md:flex-row items-center justify-between relative overflow-hidden shadow-2xl">
             <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
             <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-black/20 rounded-full blur-3xl"></div>
-            
+
             <div className="relative z-10 max-w-xl text-center md:text-left mb-10 md:mb-0">
               <span className="inline-block px-4 py-1.5 rounded-full bg-white/20 text-white text-sm font-semibold mb-6 backdrop-blur-md">
                 LIMITED TIME OFFER
@@ -204,7 +221,7 @@ const Home = () => {
                 </Link>
               </div>
             </div>
-            
+
             <div className="relative z-10 bg-[#FF3B30] w-48 h-48 md:w-64 md:h-64 rounded-full flex items-center justify-center border-8 border-white/20 shadow-2xl transform rotate-12 shrink-0">
               <div className="text-center transform -rotate-12">
                 <span className="block text-5xl md:text-7xl font-bold">20%</span>

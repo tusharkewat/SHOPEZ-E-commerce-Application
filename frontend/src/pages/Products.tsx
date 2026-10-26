@@ -25,7 +25,25 @@ const Products = () => {
         if (sort) query.append('sort', sort);
 
         const res = await api.get(`/products?${query.toString()}`);
-        setProducts(res.data);
+
+        console.log("Products API response:", res.data);
+
+        const responseData = res.data;
+
+        const productList = Array.isArray(responseData)
+          ? responseData
+          : Array.isArray(responseData?.products)
+            ? responseData.products
+            : Array.isArray(responseData?.data)
+              ? responseData.data
+              : null;
+
+        if (productList === null) {
+          console.error("Unexpected products API response:", responseData);
+          setProducts([]);
+        } else {
+          setProducts(productList);
+        }
       } catch (error) {
         console.error("Failed to fetch products", error);
       } finally {
@@ -52,7 +70,7 @@ const Products = () => {
   return (
     <div className="bg-[#F5F5F5] min-h-screen py-10">
       <div className="max-w-[1280px] mx-auto px-6">
-        
+
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -63,14 +81,14 @@ const Products = () => {
 
         {/* Mobile Filter Toggle */}
         <div className="md:hidden mb-6 flex justify-between items-center">
-          <button 
+          <button
             onClick={() => setShowFilters(!showFilters)}
             className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-gray-200 font-medium text-sm"
           >
             <Filter className="w-4 h-4" /> Filters
           </button>
-          
-          <select 
+
+          <select
             value={sort}
             onChange={(e) => updateFilter('sort', e.target.value)}
             className="bg-white border text-sm border-gray-200 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-[#5A4BFF]"
@@ -83,7 +101,7 @@ const Products = () => {
         </div>
 
         <div className="flex flex-col md:flex-row gap-8">
-          
+
           {/* Sidebar Filters */}
           <aside className={`md:w-64 flex-shrink-0 ${showFilters ? 'block' : 'hidden'} md:block`}>
             <div className="bg-white rounded-2xl p-6 shadow-sm sticky top-28 border border-gray-100">
@@ -101,13 +119,13 @@ const Products = () => {
                       <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${category === cat ? 'bg-[#5A4BFF] border-[#5A4BFF]' : 'border-gray-300 group-hover:border-[#5A4BFF]'}`}>
                         {category === cat && <div className="w-2 h-2 bg-white rounded-sm" />}
                       </div>
-                      <input 
-                        type="radio" 
+                      <input
+                        type="radio"
                         name="category"
-                        value={cat} 
+                        value={cat}
                         checked={category === cat}
                         onChange={(e) => updateFilter('category', e.target.value)}
-                        className="hidden" 
+                        className="hidden"
                       />
                       <span className={`text-sm ${category === cat ? 'font-medium text-gray-900' : 'text-gray-600'}`}>{cat}</span>
                     </label>
@@ -124,13 +142,13 @@ const Products = () => {
                       <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${gender === g ? 'bg-[#5A4BFF] border-[#5A4BFF]' : 'border-gray-300 group-hover:border-[#5A4BFF]'}`}>
                         {gender === g && <div className="w-2 h-2 bg-white rounded-sm" />}
                       </div>
-                      <input 
-                        type="radio" 
+                      <input
+                        type="radio"
                         name="gender"
-                        value={g} 
+                        value={g}
                         checked={gender === g}
                         onChange={(e) => updateFilter('gender', e.target.value)}
-                        className="hidden" 
+                        className="hidden"
                       />
                       <span className={`text-sm ${gender === g ? 'font-medium text-gray-900' : 'text-gray-600'} capitalize`}>{g.toLowerCase()}</span>
                     </label>
@@ -141,7 +159,7 @@ const Products = () => {
               {/* Desktop Sort */}
               <div className="hidden md:block">
                 <h4 className="font-medium text-sm text-gray-900 mb-3 uppercase tracking-wider">Sort By</h4>
-                <select 
+                <select
                   value={sort}
                   onChange={(e) => updateFilter('sort', e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#5A4BFF] focus:bg-white transition-all cursor-pointer"
@@ -185,9 +203,9 @@ const Products = () => {
                           {p.discount}% OFF
                         </div>
                       )}
-                      <img 
-                        src={p.images[0] || 'https://via.placeholder.com/300'} 
-                        alt={p.name} 
+                      <img
+                        src={p.images[0] || 'https://via.placeholder.com/300'}
+                        alt={p.name}
                         className="w-full h-full object-cover mix-blend-multiply transition-transform duration-700 group-hover:scale-105"
                       />
                     </Link>
@@ -206,7 +224,7 @@ const Products = () => {
                       </div>
                       <div className="mt-auto pt-4 flex items-center justify-between border-t border-gray-50">
                         <div className="flex flex-col">
-                          <span className="font-bold text-xl text-gray-900 leading-none">₹{(p.price * (1 - p.discount/100)).toFixed(0)}</span>
+                          <span className="font-bold text-xl text-gray-900 leading-none">₹{(p.price * (1 - p.discount / 100)).toFixed(0)}</span>
                           {p.discount > 0 && <span className="text-gray-400 text-sm line-through mt-1">₹{p.price}</span>}
                         </div>
                       </div>

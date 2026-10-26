@@ -108,7 +108,7 @@ router.put('/:id', authenticate, requireAdmin, async (req: Request, res: Respons
 
     Object.assign(product, req.body);
     await product.save();
-    
+
     const doc = product.toObject();
     res.json({ ...doc, id: doc._id });
   } catch (error) {
